@@ -1,0 +1,81 @@
+version: "3.9"
+services:
+  redis-master:
+    image: redis:latest
+    container_name: redis-master
+    ports:
+      - "10000:6379"
+    networks:
+      - redis-net
+
+  redis-slave:
+    image: redis:latest
+    # container_name: slave
+    ports:
+      - "6379"
+    command: redis-server --slaveof redis-master 6379
+    depends_on:
+      - redis-master
+    networks:
+      - redis-net
+    deploy:
+      replicas: 2
+
+  mongo1:
+    container_name: mongo1
+    image: mongo:latest
+    volumes:
+      - ./rs-init.sh:/scripts/rs-init.sh
+      - ./init.js:/scripts/init.js
+      - ./.docker-compose/mongo1/:/data/db
+    networks:
+      - mongo-net
+    ports:
+      - 28000:27017
+    depends_on:
+      - mongo2
+      - mongo3
+    links:
+      - mongo2
+      - mongo3
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+
+  mongo2:
+    container_name: mongo2
+    image: mongo:latest
+    networks:
+      - mongo-net
+    ports:
+      - 28001:27017
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+    volumes:
+      - ./.docker-compose/mongo2/:/data/db
+  mongo3:
+    container_name: mongo3
+    image: mongo:latest
+    networks:
+      - mongo-net
+    ports:
+      - 28002:27017
+    restart: always
+    entrypoint: ["/usr/bin/mongod", "--bind_ip_all", "--replSet", "dbrs"]
+    volumes:
+      - ./.docker-compose/mongo3/:/data/db
+
+  flower:
+    image: mher/flower
+    # command: ["flower", "--broker=redis://redis-master:6379/0", "--port=8888"]
+    environment:
+      - CELERY_BROKER_URL=redis://redis-master:6379/0
+      - FLOWER_PORT=8888
+    ports:
+      - 8888:8888
+    networks:
+      - redis-net
+networks:
+  redis-net:
+    driver: bridge
+  mongo-net:
+    driver: bridge
