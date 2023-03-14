@@ -50,4 +50,4 @@ class EnSentimentAnalysis:
         scores = output[0][0].detach().numpy()
         scores = softmax(scores)
 
-        return self._sformat_output(scores)
+        return self._format_output(scores)
