@@ -1,9 +1,10 @@
+from typing import TYPE_CHECKING
 
+if TYPE_CHECKING:
+    from celery import Celery
 
-def get_task_info(celery,task_id):
-        """
-        return task info for the given task_id
-        """
+def get_task_info(celery:Celery,task_id:str) -> dict:
+        """Return task info for the given task_id."""
         task_result = celery.AsyncResult(task_id)
         result = {
             "task_id": task_id,

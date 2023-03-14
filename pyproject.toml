@@ -1,0 +1,69 @@
+[tool.ruff]
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+    "D",  # flake8-debugger
+    "UP",
+    "YTT",
+    "ANN",
+    "G",
+    "PL",
+    "RUF",
+    "NPY",
+    "PGH",
+    "PTH"
+]
+# ignore = [
+#     "E501",  # line too long, handled by black
+#     "B008",  # do not perform function calls in argument defaults
+#     "C901",  # too complex
+# ]
+ignore = [
+    "E501",  # line too long, handled by black
+    "D211",  # No blank lines allowed before class 
+    "D212",  # No blank lines allowed before class docstring
+    "ANN101",  # Missing type annotation for self in method
+    "D404",
+    "D100", # Missing docstring in public module
+    "D401", # First line should be in imperative moods
+    "PLR0913",
+    "PLR0915", # Too many statements
+    "D102",
+    "D101"
+]
+
+# Exclude a variety of commonly ignored directories.
+exclude = [
+    ".bzr",
+    ".direnv",
+    ".eggs",
+    ".git",
+    ".hg",
+    ".mypy_cache",
+    ".nox",
+    ".pants.d",
+    ".pytype",
+    ".ruff_cache",
+    ".svn",
+    ".tox",
+    ".venv",
+    "__pypackages__",
+    "_build",
+    "buck-out",
+    "build",
+    "dist",
+    "node_modules",
+    "venv",
+]
+
+dummy-variable-rgx = "^(_+|(_+[a-zA-Z0-9_]*[a-zA-Z0-9]+?))$"
+target-version = "py38"
+
+
+[tool.ruff.mccabe]
+# Unlike Flake8, default to a complexity level of 10.
+max-complexity = 10

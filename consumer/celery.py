@@ -1,9 +1,10 @@
-from celery import Celery,worker
-from dotenv import dotenv_values
-from nlp.thai_sentiment_analysis import ThaiSentimentAnalysis
+from celery import Celery
+
 from nlp.en_sentiment_analysis import EnSentimentAnalysis
+from nlp.thai_sentiment_analysis import ThaiSentimentAnalysis
+
 from .utils import get_database
-import os
+
 # app.conf.broker_url = os.environ.get("CELERY_BROKER_URL", "redis://localhost:6379")
 # app.conf.result_backend = os.environ.get("CELERY_RESULT_BACKEND", "redis://localhost:6379")
 celery = Celery('tasks',broker='redis://192.168.1.183:49153', backend='redis://192.168.1.183:49153',include=['consumer.tasks.task'])
@@ -27,4 +28,4 @@ if __name__ == '__main__':
 
 
     celery.start()
-    
+

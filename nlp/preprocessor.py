@@ -1,14 +1,10 @@
-# -*- coding: utf-8 -*-
-"""
-Preprocessing for thai2transformers
-"""
-from typing import Collection, Callable
-from functools import partial
-import re
+"""Preprocessing for thai2transformers."""
 import html
+import re
+from typing import Callable, Collection
+
 import emoji
 from pythainlp.tokenize import word_tokenize
-
 
 _TK_UNK, _TK_REP, _TK_WREP, _TK_URL, _TK_END = "<unk> <rep> <wrep> <url> </s>".split()
 
@@ -17,13 +13,13 @@ SPACE_SPECIAL_TOKEN = "<_>"
 # str->str rules
 def fix_html(text: str) -> str:
     """
-        List of replacements from html strings in `test`. (code from `fastai`)
-        :param str text: text to replace html string
-        :return: text where html strings are replaced
-        :rtype: str
-        :Example:
-            >>> fix_html("Anbsp;amp;nbsp;B @.@ ")
-            A & B.
+    List of replacements from html strings in `test`. (code from `fastai`)
+    :param str text: text to replace html string
+    :return: text where html strings are replaced
+    :rtype: str
+    :Example:
+    >>> fix_html("Anbsp;amp;nbsp;B @.@ ")
+    A & B.
     """
     re1 = re.compile(r"  +")
     text = (
@@ -46,13 +42,13 @@ def fix_html(text: str) -> str:
 
 def replace_url(text: str) -> str:
     """
-        Replace url in `text` with TK_URL (https://stackoverflow.com/a/6041965)
-        :param str text: text to replace url
-        :return: text where urls  are replaced
-        :rtype: str
-        :Example:
-            >>> replace_url("go to https://github.com")
-            go to <url>
+    Replace url in `text` with TK_URL (https://stackoverflow.com/a/6041965)
+    :param str text: text to replace url
+    :return: text where urls  are replaced
+    :rtype: str
+    :Example:
+    >>> replace_url("go to https://github.com")
+    go to <url>.
     """
     URL_PATTERN = r"(http|ftp|https)://([\w_-]+(?:(?:\.[\w_-]+)+))([\w.,@?^=%&:/~+#-]*[\w@?^=%&/~+#-])?"
     return re.sub(URL_PATTERN, _TK_URL, text)
@@ -60,13 +56,13 @@ def replace_url(text: str) -> str:
 
 def rm_brackets(text: str) -> str:
     """
-        Remove all empty brackets and artifacts within brackets from `text`.
-        :param str text: text to remove useless brackets
-        :return: text where all useless brackets are removed
-        :rtype: str
-        :Example:
-            >>> rm_brackets("hey() whats[;] up{*&} man(hey)")
-            hey whats up man(hey)
+    Remove all empty brackets and artifacts within brackets from `text`.
+    :param str text: text to remove useless brackets
+    :return: text where all useless brackets are removed
+    :rtype: str
+    :Example:
+    >>> rm_brackets("hey() whats[;] up{*&} man(hey)")
+    hey whats up man(hey).
     """
     # remove empty brackets
     new_line = re.sub(r"\(\)", "", text)
@@ -89,39 +85,38 @@ def rm_brackets(text: str) -> str:
 
 def replace_newlines(text: str) -> str:
     """
-        Replace newlines in `text` with spaces.
-        :param str text: text to replace all newlines with spaces
-        :return: text where all newlines are replaced with spaces
-        :rtype: str
-        :Example:
-            >>> rm_useless_spaces("hey whats\n\nup")
-            hey whats  up
+    Replace newlines in `text` with spaces.
+    :param str text: text to replace all newlines with spaces
+    :return: text where all newlines are replaced with spaces
+    :rtype: str
+    :Example:
+    >>> rm_useless_spaces("hey whats\n\nup")
+    hey whats  up.
     """
-
     return re.sub(r"[\n]", " ", text.strip())
 
 
 def rm_useless_spaces(text: str) -> str:
     """
-        Remove multiple spaces in `text`. (code from `fastai`)
-        :param str text: text to replace useless spaces
-        :return: text where all spaces are reduced to one
-        :rtype: str
-        :Example:
-            >>> rm_useless_spaces("oh         no")
-            oh no
+    Remove multiple spaces in `text`. (code from `fastai`)
+    :param str text: text to replace useless spaces
+    :return: text where all spaces are reduced to one
+    :rtype: str
+    :Example:
+    >>> rm_useless_spaces("oh         no")
+    oh no.
     """
     return re.sub(" {2,}", " ", text)
 
 def replace_spaces(text: str, space_token: str = SPACE_SPECIAL_TOKEN) -> str:
     """
-        Replace spaces with _
-        :param str text: text to replace spaces
-        :return: text where all spaces replaced with _
-        :rtype: str
-        :Example:
-            >>> replace_spaces("oh no")
-            oh_no
+    Replace spaces with _
+    :param str text: text to replace spaces
+    :return: text where all spaces replaced with _
+    :rtype: str
+    :Example:
+    >>> replace_spaces("oh no")
+    oh_no.
     """
     return re.sub(" ", space_token, text)
 
@@ -135,7 +130,7 @@ def replace_rep_after(text: str) -> str:
     :Example:
         >>> text = "กาาาาาาา"
         >>> replace_rep_after(text)
-        'กา'
+        'กา'.
     """
 
     def _replace_rep(m):
@@ -157,7 +152,7 @@ def ungroup_emoji(toks: Collection[str]) -> Collection[str]:
     :Example:
         >>> toks = []
         >>> ungroup_emoji(toks)
-        []
+        [].
     """
     res = []
     for tok in toks:
@@ -178,12 +173,12 @@ def replace_wrep_post(toks: Collection[str]) -> Collection[str]:
     :Example:
         >>> toks = ["กา", "น้ำ", "น้ำ", "น้ำ", "น้ำ"]
         >>> replace_wrep_post(toks)
-        ['กา', 'น้ำ']
+        ['กา', 'น้ำ'].
     """
     previous_word = None
     rep_count = 0
     res = []
-    for current_word in toks + [_TK_END]:
+    for current_word in [*toks, _TK_END]:
         if current_word == previous_word:
             rep_count += 1
         elif (current_word != previous_word) & (rep_count > 0):
@@ -204,7 +199,7 @@ def remove_space(toks: Collection[str]) -> Collection[str]:
     :Example:
         >>> toks = ['ฉัน','เดิน',' ','กลับ','บ้าน']
         >>> remove_space(toks)
-        ['ฉัน','เดิน','กลับ','บ้าน']
+        ['ฉัน','เดิน','กลับ','บ้าน'].
     """
     res = []
     for t in toks:

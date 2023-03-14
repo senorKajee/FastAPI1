@@ -1,18 +1,34 @@
-from transformers import (
-    CamembertTokenizer,
-    AutoModelForSequenceClassification,
-    AutoTokenizer,
-    pipeline,
-    AutoConfig
-)
+from typing import List, Tuple
+
 import numpy as np
-from scipy.special import softmax
 import torch
+from scipy.special import softmax
+from transformers import AutoTokenizer
 
 
 class EnSentimentAnalysis:
 
-    def __init__(self):
+    """
+    A class to handle the English sentiment analysis model.
+
+    Attributes
+    ----------
+    tokenizer : transformers.AutoTokenizer
+        The tokenizer of the model.
+    model : torch.nn.Module
+        The english sentiment analysis model in evaluate mode.
+    id2label : dict
+        The mapping from the label id to the label name.
+
+
+    Methods
+    -------
+    infer(text:str)->Tuple[str,float]
+        Infer the sentiment of the given text.s
+    """
+
+    def __init__(self) -> None:
+        """Load the tokenizer and model. and seting up the defination of the infer result."""
         self.tokenizer = AutoTokenizer.from_pretrained(
             './nlp/en_tokenizer')
         self.model:torch.nn.Module = torch.jit.load('./nlp/model_eng_sentiment.pt')
@@ -21,31 +37,17 @@ class EnSentimentAnalysis:
         1: "neutral",
         2: "positive"
     }
-    def preprocess(self,text):
-        new_text = []
-        for t in text.split(" "):
-            t = '@user' if t.startswith('@') and len(t) > 1 else t
-            t = 'http' if t.startswith('http') else t
-            new_text.append(t)
-            
-        return " ".join(new_text)
 
-    def format_output(self, scores):
-        
-        
+    def _format_output(self, scores:List[float])->Tuple[str,float]:
+        """Format the output of the model."""
         sentiment = self.id2label[np.argmax(scores)]
-        # print(scores)
-        # print(scores[np.argmax(scores)])
-
         return sentiment, scores[np.argmax(scores)]
 
-    def infer(self, text):
-        print('infering process')
-        # processed_text = self.preprocess(text)
+    def infer(self, text:str)->Tuple[str,float]:
+        """Infer the sentiment of the given text."""
         encoded_input = self.tokenizer(text, return_tensors='pt')
         output = self.model(**encoded_input)
         scores = output[0][0].detach().numpy()
         scores = softmax(scores)
-    
 
-        return self.format_output(scores)
+        return self._sformat_output(scores)
