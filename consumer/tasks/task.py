@@ -78,10 +78,9 @@ def get_twitter_scape(self,text:str,number_of_tweets:int)->bool:
         The text to search for.
     number_of_tweets : int
         The number of tweets to scrape.
-    
-    
-
     """
+
+    # Polyglot is not stable in dependency so we will make it optional here (WIP Module).
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(text).get_items()):
         if i>number_of_tweets:
             break
