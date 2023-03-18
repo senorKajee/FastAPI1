@@ -33,7 +33,9 @@ ignore = [
     "PLR0913",
     "PLR0915", # Too many statements
     "D102",
-    "D101"
+    "D101",
+    "D417"
+
 ]
 
 # Exclude a variety of commonly ignored directories.

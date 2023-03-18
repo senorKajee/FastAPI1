@@ -4,11 +4,15 @@ from typing import Any, Literal, Tuple, Union
 import snscrape.modules.twitter as sntwitter
 from polyglot.detect import Detector
 from polyglot.detect.base import UnknownLanguage
+import regex
 
 from nlp.preprocessor import process_transformers
 
 from ..celery import celery, db, en_sentiment_analysis, thai_sentiment_analysis
 
+RE_BAD_CHARS = regex.compile(r"[\p{Cc}\p{Cs}]+")
+def remove_bad_chars(text):
+    return RE_BAD_CHARS.sub("", text)
 
 @celery.task(name="infer_thai_text")
 def infer_thai_text(text:str,request_id:str=None)-> Tuple[Union[Literal['negative', 'neutral', 'positive'] , None, Any]]:
@@ -74,21 +78,24 @@ def get_twitter_scape(self,text:str,number_of_tweets:int)->bool:
         The text to search for.
     number_of_tweets : int
         The number of tweets to scrape.
+    
+    
 
     """
     for i,tweet in enumerate(sntwitter.TwitterSearchScraper(text).get_items()):
         if i>number_of_tweets:
             break
         try :
-            if Detector(tweet.rawContent).language.code == 'th':
-                print(f"tweet: {tweet.rawContent} is thai")
-                celery.send_task('infer_thai_text', args=[f"{tweet.rawContent}",self.request.id])
-            elif Detector(tweet.rawContent).language.code == 'en':
-                print(f"tweet: {tweet.rawContent} is english")
-                celery.send_task('infer_en_text', args=[f"{tweet.rawContent}",self.request.id,"en"])
-            else:
-                print(f"tweet: {tweet.rawContent} is other")
-                celery.send_task('infer_en_text', args=[f"{tweet.rawContent}",self.request.id,"other"])
+            celery.send_task('infer_thai_text', args=[f"{tweet.rawContent}",self.request.id])
+        #     if Detector(tweet.rawContent).language.code == 'th':
+        #         print(f"tweet: {tweet.rawContent} is thai")
+        #         celery.send_task('infer_thai_text', args=[f"{tweet.rawContent}",self.request.id])
+        #     elif Detector(tweet.rawContent).language.code == 'en':
+        #         print(f"tweet: {tweet.rawContent} is english")
+        #         celery.send_task('infer_en_text', args=[f"{tweet.rawContent}",self.request.id,"en"])
+        #     else:
+        #         print(f"tweet: {tweet.rawContent} is other")
+        #         celery.send_task('infer_en_text', args=[f"{tweet.rawContent}",self.request.id,"other"])
         except UnknownLanguage:
                 celery.send_task('infer_en_text', args=[f"{tweet.rawContent}",self.request.id,"unknow_detected"])
 
