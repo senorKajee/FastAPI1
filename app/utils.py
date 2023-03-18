@@ -1,6 +1,6 @@
-from typing import TYPE_CHECKING
 
 from celery import Celery
+
 
 def get_task_info(celery:Celery,task_id:str) -> dict:
         """Return task info for the given task_id."""
