@@ -9,11 +9,15 @@ from celery import Celery
 from fastapi import FastAPI
 from pymongo import MongoClient
 from routers import Router
+from bson.objectid import ObjectId
+from dotenv import load_dotenv
+import os
+load_dotenv()
 
 
 def _create_app() -> FastAPI:
     current_app = FastAPI()
-    current_app.celery_app = Celery('tasks', broker='redis://192.168.1.183:49153', backend='redis://192.168.1.183:49153')
+    current_app.celery_app = Celery('tasks', broker=os.environ["REDIS_URL"], backend=os.environ["REDIS_URL"])
     current_app.celery_app.conf.update(task_track_started=True)
     current_app.celery_app.conf.update(task_serializer='pickle')
     current_app.celery_app.conf.update(result_serializer='pickle')
@@ -27,8 +31,9 @@ app = _create_app()
 @app.on_event("startup")
 def startup_db_client()-> None:
     """Initialize the database connection. and add connection context to the app object."""
-    app.mongodb_client = MongoClient('mongodb://192.168.1.183:49155/fddf?readPreference=primary&directConnection=true&ssl=false')
-    app.database = app.mongodb_client["backendSf342"]
+    app.mongodb_client = MongoClient(os.environ["DATABASE_URL"])
+    app.database = app.mongodb_client[os.environ["DATABASE"]]
+
 
 @app.on_event("shutdown")
 def shutdown_db_client()-> None:

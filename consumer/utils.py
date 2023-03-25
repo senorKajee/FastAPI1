@@ -1,7 +1,8 @@
+from pymongo.database import Database
 from pymongo import MongoClient
 
 
-def get_database()->"MongoClient":
+def get_database()->"Database":
    """Return MongoClient instance for the database."""
    # Provide the mongodb atlas url to connect python to mongodb using pymongo
    CONNECTION_STRING = "mongodb://192.168.1.183:49155/sf341?readPreference=primary&directConnection=true&ssl=false"
@@ -10,4 +11,4 @@ def get_database()->"MongoClient":
    client = MongoClient(CONNECTION_STRING)
 
    # Create the database for our example (we will use the same database throughout the tutorial
-   return client['sf342-2']
+   return client['sf342']

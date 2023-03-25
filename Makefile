@@ -7,7 +7,7 @@ start:
 	python ./app/main.py
 
 start_worker: 
-	celery -A consumer.celery worker --loglevel=INFO  --concurrency=1 -E
+	celery -A consumer.celery worker --loglevel=INFO  --concurrency=2 -E
 
 compose:
 	./startReplicaSetEnvironment.sh

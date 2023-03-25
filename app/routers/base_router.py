@@ -3,11 +3,14 @@ This Module contain explicit router for the base path of the application.
 
 that will explicitly add to the root path of the application.
 """
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request,Body
 from fastapi.responses import JSONResponse
 from numpy import int64
 from pydantic import BaseModel
 from utils import get_task_info
+from typing_extensions import Annotated
+from typing import List
+from bson.objectid import ObjectId
 
 router = APIRouter(prefix='', responses={404: {"description": "Not found"}})
 
@@ -46,6 +49,28 @@ async def twitter(keyword:str,limit:int,request:Request)->TaskInferResonse:
     if len(keyword.lstrip()) == 0:
         raise HTTPException(status_code=404, detail="Item not found")
     task = request.app.celery_app.send_task('get_twitter_scape',args=[keyword,limit])
+    res = TaskInferResonse(task_id=task.id)
+    return res
+
+class TaskInfer2Req(BaseModel):
+    keywords: List[str]
+    analysisJobId: str
+    since: str
+    until: str
+
+@router.post("/twiiter2")
+async def twitter2(task:Annotated[TaskInfer2Req,Body()],request:Request)->TaskInferResonse:
+    """Create task for twitter scapping to celery worker."""
+    keywords = task.keywords
+    analysisjobId = task.analysisJobId    
+    since = task.since
+    until = task.until
+    bson_obj = ObjectId(analysisjobId)
+    # request.app.database['AnalysisJob'].update_one({"_id":bson_obj},{"$set":{"status":"RUNNING"}})
+
+    if len(keywords[0].lstrip()) == 0:
+        raise HTTPException(status_code=404, detail="Item not found")
+    task = request.app.celery_app.send_task('get_twitter_scape',args=[keywords,5000,analysisjobId,since,until],retries=3, retry_backoff=True, retry_backoff_max=60, retry_jitter=True, retry_jitter_max=10)
     res = TaskInferResonse(task_id=task.id)
     return res
 
