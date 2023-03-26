@@ -65,11 +65,11 @@ async def twitter2(task:Annotated[TaskInfer2Req,Body()],request:Request)->TaskIn
     analysisjobId = task.analysisJobId    
     since = task.since
     until = task.until
-    bson_obj = ObjectId(analysisjobId)
+    # bson_obj = ObjectId(analysisjobId)
     # request.app.database['AnalysisJob'].update_one({"_id":bson_obj},{"$set":{"status":"RUNNING"}})
 
-    if len(keywords[0].lstrip()) == 0:
-        raise HTTPException(status_code=404, detail="Item not found")
+    # if len(keywords[0].lstrip()) == 0:
+    #     raise HTTPException(status_code=404, detail="Item not found")
     task = request.app.celery_app.send_task('get_twitter_scape',args=[keywords,5000,analysisjobId,since,until],retries=3, retry_backoff=True, retry_backoff_max=60, retry_jitter=True, retry_jitter_max=10)
     res = TaskInferResonse(task_id=task.id)
     return res
