@@ -4,14 +4,15 @@ Entry point of the FastAPi apigateway application.
 This module contains the main FastAPI application and the initialization of the database connection,
 and regristration of the routers. and other stuffs.
 """
+import os
+
 import uvicorn
 from celery import Celery
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from pymongo import MongoClient
 from routers import Router
-from bson.objectid import ObjectId
-from dotenv import load_dotenv
-import os
+
 load_dotenv()
 
 

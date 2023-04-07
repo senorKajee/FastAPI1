@@ -1,5 +1,5 @@
-from pymongo.database import Database
 from pymongo import MongoClient
+from pymongo.database import Database
 
 
 def get_database()->"Database":

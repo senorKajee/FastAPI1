@@ -1,18 +1,17 @@
 
-from typing import Any, Literal, Tuple, Union
+from datetime import date
+from typing import Any, List, Literal, Tuple, Union
 
 import snscrape.modules.twitter as sntwitter
+from bson.objectid import ObjectId
+from celery.result import AsyncResult
+from dateutil import parser
 from langdetect import detect
 
 from nlp.preprocessor import process_transformers
 
 from ..celery import celery, db, en_sentiment_analysis, thai_sentiment_analysis
-from bson.objectid import ObjectId
-from typing import List, Tuple
-import datetime
-from datetime import date
-from celery.result import AsyncResult
-from dateutil import parser
+
 
 @celery.task(name="infer_thai_text",acks_late=True)
 def infer_thai_text(keyword:str,text:str,tweet_date:date,analysisJobId:str=None)-> Tuple[Union[Literal['negative', 'neutral', 'positive'] , None, Any]]:
@@ -37,7 +36,7 @@ def infer_thai_text(keyword:str,text:str,tweet_date:date,analysisJobId:str=None)
     #     db['SentimentResult'].insert_one({"request_id":analysisJobId,"analysisJobId":ObjectId(analysisJobId),"raw_text":text,"text":preprocess_text,"sentiment":result[0],"score":result[1].item(),"process_lang":"th"}).inserted_id
 
     db['SentimentResult'].insert_one({"analysisJobId":ObjectId(analysisJobId),"publishData":tweet_date,"keyword":keyword,"raw_text":text,"text":preprocess_text,"sentiment":result[0],"score":result[1].item(),"process_lang":"th"}).inserted_id
-    
+
     return result
 
 @celery.task(name="infer_en_text",acks_late=True)
@@ -62,7 +61,7 @@ def infer_en_text(keyword:str,text:str,tweet_date:date,analysisJobId:str=None,la
     # else:
     #     db['SentimentResult'].insert_one({"request_id":analysisJobId,"analysisJobId":analysisJobId,"raw_text":text,"text":preprocess_text,"sentiment":result[0],"score":result[1].item(),"process_lang":lang}).inserted_id
     db['SentimentResult'].insert_one({"analysisJobId":ObjectId(analysisJobId),"publishData":tweet_date,"keyword":keyword,"raw_text":text,"text":preprocess_text,"sentiment":result[0],"score":result[1].item(),"process_lang":lang}).inserted_id
-   
+
     return result
 
 
@@ -83,7 +82,7 @@ def get_twitter_scape(self,text_lst:List[str],number_of_tweets:int,analysisJobId
         The number of tweets to scrape.
     """
     bson_obj = ObjectId(analysisJobId)
-    db['AnalysisJob'].update_one({"_id":bson_obj},{"$set":{"status":"RUNNING"}}) 
+    db['AnalysisJob'].update_one({"_id":bson_obj},{"$set":{"status":"RUNNING"}})
     # Polyglot is not stable in dependency so we will make it optional here (WIP Module).
     # start_date = datetime.date(2022, 1, 1)
     # end_date = datetime.date.today()
@@ -96,14 +95,14 @@ def get_twitter_scape(self,text_lst:List[str],number_of_tweets:int,analysisJobId
     task_ids = []
 
     for search_text in text_lst:
-         
+
         for i,tweet in enumerate(sntwitter.TwitterSearchScraper(search_text+f' since:{since_str} until:{until_str}').get_items()):
             if i>number_of_tweets:
                 break
 
             try :
                 buff = detect(tweet.rawContent)
-                
+
                 if buff == 'th':
                     print(f"tweet: {tweet.rawContent} is thai")
                     task_id = celery.send_task('infer_thai_text', args=[search_text,f"{tweet.rawContent}",tweet.date,analysisJobId]).task_id
@@ -117,7 +116,7 @@ def get_twitter_scape(self,text_lst:List[str],number_of_tweets:int,analysisJobId
             except Exception:
                     task_id = celery.send_task('infer_en_text', args=[search_text,f"{tweet.rawContent}",tweet.date,analysisJobId,"unknow_detected"]).task_id
                     task_count += 1
-            
+
             task_ids.append(task_id)
 
     if task_count == 0:
@@ -127,7 +126,7 @@ def get_twitter_scape(self,text_lst:List[str],number_of_tweets:int,analysisJobId
         result = AsyncResult(task_id)
         if result.ready():
              pass
-        
+
     db['AnalysisJob'].update_one({"_id":ObjectId(analysisJobId)},{"$set":{"status":"DONE"}})
 
     print(f"Task id: {self.request.id} is done")

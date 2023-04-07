@@ -3,14 +3,14 @@ This Module contain explicit router for the base path of the application.
 
 that will explicitly add to the root path of the application.
 """
-from fastapi import APIRouter, HTTPException, Request,Body
+from typing import List
+
+from fastapi import APIRouter, Body, HTTPException, Request
 from fastapi.responses import JSONResponse
 from numpy import int64
 from pydantic import BaseModel
-from utils import get_task_info
 from typing_extensions import Annotated
-from typing import List
-from bson.objectid import ObjectId
+from utils import get_task_info
 
 router = APIRouter(prefix='', responses={404: {"description": "Not found"}})
 
@@ -62,7 +62,7 @@ class TaskInfer2Req(BaseModel):
 async def twitter2(task:Annotated[TaskInfer2Req,Body()],request:Request)->TaskInferResonse:
     """Create task for twitter scapping to celery worker."""
     keywords = task.keywords
-    analysisjobId = task.analysisJobId    
+    analysisjobId = task.analysisJobId
     since = task.since
     until = task.until
     # bson_obj = ObjectId(analysisjobId)
